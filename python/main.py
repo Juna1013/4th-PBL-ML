@@ -39,4 +39,18 @@ class Robot:
         self.IN4.value(0)
 
 class Photo_sensor:
-    def __init__()
+    def __init__(self):
+        self.sensor_1 = Pin(6, Pin.IN)
+
+    def read_sensor(self):
+        return self.sensor_1.value()
+
+robot = Robot()
+sensor = Photo_sensor()
+utime.sleep(1)
+
+while True:
+    if sensor.read_sensor() == 0:
+        robot.left()
+    else:
+        robot.right()
