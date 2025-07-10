@@ -81,6 +81,7 @@ class Robot:
 
         #初期状態は停止
         self.stop()
+     
     def _set_motor_direction(self, motor_side, direction):
 
     def set_speed(self, left_speed, right_speed):
