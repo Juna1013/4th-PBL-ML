@@ -108,5 +108,17 @@ sensor = Photo_sensor()
 utime.sleep(1)
 
 try:
+    while True:
+
+ if
+
+ else:
+
+ utime.sleep_ms(10)
 
 except KeyboardInterrupt:
+    print("¥nプログラム終了")
+    robot.stop()
+    # 必要に応じてPWMを停止（MicroPythonのPWMはstopメソッドがない場合が多い）
+    # pwm_left.deinit()
+    # pwm_right.deinit()
