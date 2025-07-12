@@ -83,8 +83,44 @@ class Robot:
         self.stop()
      
     def _set_motor_direction(self, motor_side, direction):
+    """
+    モーターの方向を設定するヘルパー関数
+    motor_side: 'left' or 'right'
+    direction: 'forward', 'backward', 'stop_brake', 'stop_free'
+    """
+    if motor_side == 'left':
+        if direction == 'forward':
+            self.in1.value(1)
+            self.in2.value(0)
+        elif direction == 'backward':
+            self.in1.value(0)
+            self.in2.value(1)
+        elif direction == 'stop_brake':
+            self.in1.value(1)
+            self.in2.value(1)
+        elif direction == 'stop_free':
+            self.in1.value(0)
+            self.in2.value(0)
+    elif motor_side == 'right':
+        if direction == 'forward':
+            self.in3.value(1)
+            self.in4.value(0)
+        elif direction == 'backward':
+            self.in3.value(0)
+            self.in4.value(1)
+        elif direction == 'stop_brake':
+            self.in3.value(1)
+            self.in4.value(1)
+        elif directon == 'stop_free':
+            self.in3.value(0)
+            self.in4.value(0)
 
     def set_speed(self, left_speed, right_speed):
+        """
+        左右のモーター速度を設定
+        speed: 0（停止）から65535（最大）の値
+        方向はforwardメソッドで設定済みを前提
+        """
 
     def forward(self, speed=BASE_SPEED):
 
