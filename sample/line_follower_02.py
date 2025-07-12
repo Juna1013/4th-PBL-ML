@@ -121,23 +121,64 @@ class Robot:
         speed: 0（停止）から65535（最大）の値
         方向はforwardメソッドで設定済みを前提
         """
+        # 速度範囲を0-65535に制限
+        left_speed = max(0, min(65535, left_speed))
+        right_speed = max(0, min(65535, right_speed))
+
+        self.pwm_left.duty_u16(left_speed)
+        self.pwm_right.duty_u16(right_speed)
 
     def forward(self, speed=BASE_SPEED):
+        self._set_motor_direction('left', 'forward')
+        self._set_motor_direction('right', 'forward')
+        self.set_speed(speed, speed)
 
     def turn_right(self, base_speed=BASE_SPEED, adjust=TURN_ADJUST):
+        # 左に旋回（右モーター遅め、左モーター遅め/停止）
+        self._set_motor_direction('left', 'forward')
+        self._set_motor_direction('right', 'forward')
+        self.set_speed(base_speed - adjust, base_speed + adjust)
 
     def turn_left(self, base_speed=BASE_SPEED, adjust=TURN_ADJUST):
+        # 左に旋回（右モーター速め、左モーター遅め/停止）
+        self._set_motor_direction('left', 'forward') 
+        self._set_motor_direction('right', 'forward')
+        self.set_speed(base_speed - adjust, base_speed + adjust)
 
     def back(self, speed=BASE_SPEED):
+        self._set_motor_direction('left', 'backward')
+        self._set_motor_direction('right', 'backward')
+        self.set_speed(speed, speed)
 
     def stop(self):
+        # ブレーキをかけて停止
+        self._set_motor_direction('left', 'stop_brake')
+        self._set_motor_direction('right', 'stop_brake')
+        self.set_speed(0, 0)
 
     def release(self):
+    # モーターをフリーにする
+        self._set_motor_direction('left', 'stop_free')
+        self._set_motor_direction('right', 'stop_free')
+        self.set_speed(0, 0) 
+
 
 class Photo_sensor:
     def __init__(self):
+        self.sensor_center = Pin(SENSOR_CENTER_PIN, Pin.IN)
+        # 複数センサーを使用する場合の例
+        # self.sensor_left = Pin(SENSOR_LEFT_PIN, Pin.IN)
+        # self.sensor_right = Pin(SENSOR_RIGHT_PIN, Pin.IN)
 
     def read_center_sensor(self):
+        return self.sensor_center.value()
+    # 複数センサーを使用する場合の例
+    # def read_all_sensors(self):
+    #     return {
+    #         'left': self.sensor_left.value(),
+    #         'center': self.sensor_center.value(),
+    #         'right': self.sensor_right.value()
+    #     }
 
 robot = Robot()
 sensor = Photo_sensor()
@@ -145,10 +186,26 @@ utime.sleep(1)
 
 try:
     while True:
+        current_sensor_value = sensor.read_center_sensor()
 
- if
+        print(f"センサー値: {current_sensor_value}", end=" -> ")
 
- else:
+        if current_sensor_value == LINE_DETECTED_VALUE:
+            # ラインを検知している場合（中央のラインに乗っている）
+            # 基本的に直進
+            robot.forward(BASE_SPEED)
+            print("直進")
+        else:
+            # ラインを検知していない場合（ラインから外れた、白い床）
+            # このロジックは、センサーがラインの「どちら側」にあるかによって変わる
+            # 例: センサーがラインの左側をなぞっている場合
+            #     ラインを外したら右へ曲がりラインを探す
+            # 例: センサーがラインの右側をなぞっている場合
+            #     ラインを外したら左へ曲がりラインを探す
+            # 
+            # ここでは、単純にラインを外したら右に曲がってラインを探す例
+            robot.turn_right(BASE_SPEED, TURN_ADJUST) # ラインに戻るために曲がる
+            print("右旋回 (ライン探索)")
 
  utime.sleep_ms(10)
 
