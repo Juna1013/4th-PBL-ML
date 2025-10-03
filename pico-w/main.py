@@ -1,17 +1,33 @@
+"""
+Pico W ライントレースカー制御システム
+音声認識 + WiFi制御 + ライントレース機能
+"""
+
 import time
-import asyncio
 import gc
 from audio_capture import AudioCapture
 from motor_control import MotorController
 from wifi_client import WiFiClient
+from sensors import PhotoReflector
+from line_trace_controller import LineTraceController
 from config import COMMAND_CHECK_INTERVAL
 
+
 class PicoWController:
+    """メインコントローラー"""
+
     def __init__(self):
         print("Pico W ライントレースカー制御システム起動中...")
+
+        # 各モジュールの初期化
         self.audio = AudioCapture()
         self.motor = MotorController()
         self.wifi = WiFiClient()
+        self.sensor = PhotoReflector()
+
+        # ライントレースコントローラー
+        self.line_tracer = LineTraceController(self.motor, self.sensor)
+
         self.running = True
         self.last_command = "STOP"
 
@@ -27,6 +43,17 @@ class PicoWController:
         print("システム初期化完了")
         return True
 
+    def handle_command(self, command):
+        """コマンド処理"""
+        if command == "LINE_TRACE":
+            # ライントレースモードに切り替え
+            self.line_tracer.run()
+            return "STOP"  # ライントレース終了後は停止状態に
+        else:
+            # 通常のモーターコマンド
+            self.motor.execute_command(command)
+            return command
+
     def main_loop(self):
         """メインループ"""
         while self.running:
@@ -37,8 +64,9 @@ class PicoWController:
                 # コマンドが変更された場合のみ実行
                 if command != self.last_command:
                     print(f"新しいコマンド: {self.last_command} → {command}")
-                    self.motor.execute_command(command)
-                    self.last_command = command
+
+                    # コマンド処理
+                    self.last_command = self.handle_command(command)
 
                     # ステータスをサーバーに送信
                     self.wifi.send_status(f"コマンド実行: {command}")
@@ -66,6 +94,7 @@ class PicoWController:
         self.wifi.send_status("システム終了")
         self.motor.cleanup()
         print("システム終了完了")
+
 
 # メイン実行部分
 if __name__ == "__main__":
