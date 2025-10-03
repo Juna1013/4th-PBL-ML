@@ -1,13 +1,3 @@
-"""
-テスト用ライントレースプログラム
-最低限の機能のみを実装したシンプル版
-
-機能:
-- 8個のフォトリフレクタで重み付けライントレース
-- PD制御による滑らかな走行
-- BOOTSELボタンでスタート/ストップ
-"""
-
 from machine import Pin, PWM
 import time
 import config
