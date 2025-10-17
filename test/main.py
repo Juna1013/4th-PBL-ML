@@ -7,43 +7,38 @@ except ImportError:
     rp2 = None
 
 # ==== ピン設定 ====
-# --- モーター ---
-MOTOR_LEFT_FWD = 5    # 左モーター前進 (M1A)
-MOTOR_LEFT_REV = 4    # 左モーター後退 (M1B)
-MOTOR_RIGHT_FWD = 7   # 右モーター前進 (M2A)
-MOTOR_RIGHT_REV = 6   # 右モーター後退 (M2B)
+MOTOR_LEFT_FWD = 5
+MOTOR_LEFT_REV = 4
+MOTOR_RIGHT_FWD = 3
+MOTOR_RIGHT_REV = 2
 
-# 配列にまとめて制御クラスへ渡す
-MOTOR_PINS = [
-    MOTOR_LEFT_FWD,
-    MOTOR_LEFT_REV,
-    MOTOR_RIGHT_FWD,
-    MOTOR_RIGHT_REV
-]
+MOTOR_PINS = [MOTOR_LEFT_FWD, MOTOR_LEFT_REV, MOTOR_RIGHT_FWD, MOTOR_RIGHT_REV]
 
-# --- フォトリフレクタ ---
-# pico-w/main.py の正しいピン設定を適用
 PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 SENSOR_WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 
-# --- 制御パラメータ ---
-BASE_SPEED = 30000
+BASE_SPEED = 15000
 MAX_SPEED = 54613
+MIN_SPEED = 5000  # 左右モーターの最低速度
 KP = 50
 KD = 10
 
 # ==== モーター制御 ====
 class MotorController:
     def __init__(self):
+        # 左右モーター前進・後退用PWMを作成
         self.motors = [PWM(Pin(p)) for p in MOTOR_PINS]
         for m in self.motors:
             m.freq(1000)
 
     def set_speed(self, left, right):
-        self.motors[0].duty_u16(int(left))
-        self.motors[1].duty_u16(0)
-        self.motors[2].duty_u16(int(right))
-        self.motors[3].duty_u16(0)
+        # 左モーター：前進ピンに0、後退ピンに速度（元のまま）
+        self.motors[0].duty_u16(0)           # 左前進ピン
+        self.motors[1].duty_u16(int(left))   # 左後退ピン
+
+        # 右モーター：前進ピンに速度、後退ピンに0（右だけ逆回転）
+        self.motors[2].duty_u16(int(right))  # 右前進ピン
+        self.motors[3].duty_u16(0)           # 右後退ピン
 
     def stop(self):
         for m in self.motors:
@@ -76,12 +71,16 @@ class LineTracer:
 
     def pd_control(self, position, on_line):
         if not on_line:
-            return (0, BASE_SPEED) if self.last_error < 0 else (BASE_SPEED, 0)
+            # 線を見失った場合は前回の方向で旋回
+            return (MIN_SPEED, BASE_SPEED) if self.last_error < 0 else (BASE_SPEED, MIN_SPEED)
+
         error = position
         correction = int(KP * error + KD * (error - self.last_error))
         self.last_error = error
-        left = max(0, min(MAX_SPEED, BASE_SPEED - correction))
-        right = max(0, min(MAX_SPEED, BASE_SPEED + correction))
+
+        # 左右速度を MIN_SPEED〜MAX_SPEED の範囲で制限
+        left = max(MIN_SPEED, min(MAX_SPEED, BASE_SPEED - correction))
+        right = max(MIN_SPEED, min(MAX_SPEED, BASE_SPEED + correction))
         return left, right
 
     def wait_for_bootsel_release(self):
@@ -91,7 +90,6 @@ class LineTracer:
 
     def run(self):
         prev_button = False
-
         try:
             while True:
                 button_pressed = rp2 and rp2.bootsel_button()
@@ -125,3 +123,4 @@ class LineTracer:
 # ==== メイン実行 ====
 if __name__ == "__main__":
     LineTracer().run()
+
