@@ -6,21 +6,45 @@ try:
 except ImportError:
     rp2 = None
 
-# ==== 設定 ====
-MOTOR_LEFT_FWD = 5
-MOTOR_LEFT_REV = 4
-MOTOR_RIGHT_FWD = 3
-MOTOR_RIGHT_REV = 2
-MOTOR_PINS = [MOTOR_LEFT_FWD, MOTOR_LEFT_REV, MOTOR_RIGHT_FWD, MOTOR_RIGHT_REV]
+# ==== ピン設定 ====
+# --- モーター ---
+MOTOR_LEFT_FWD = 20   # 左モーター前進 (M1A)
+MOTOR_LEFT_REV = 19   # 左モーター後退 (M1B)
+MOTOR_RIGHT_FWD = 17  # 右モーター前進 (M2A)
+MOTOR_RIGHT_REV = 16  # 右モーター後退 (M2B)
 
-PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
+# 配列にまとめて制御クラスへ渡す
+MOTOR_PINS = [
+    MOTOR_LEFT_FWD,
+    MOTOR_LEFT_REV,
+    MOTOR_RIGHT_FWD,
+    MOTOR_RIGHT_REV
+]
+
+# --- フォトリフレクタ ---
+PHOTO_1 = 31
+PHOTO_2 = 29
+PHOTO_3 = 27
+PHOTO_4 = 26
+PHOTO_5 = 25
+PHOTO_6 = 24
+PHOTO_7 = 22
+PHOTO_8 = 21
+
+# センサー配列と重み
+PHOTOREFLECTOR_PINS = [
+    PHOTO_1, PHOTO_2, PHOTO_3, PHOTO_4,
+    PHOTO_5, PHOTO_6, PHOTO_7, PHOTO_8
+]
 SENSOR_WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 
+# --- 制御パラメータ ---
 BASE_SPEED = 30000
 MAX_SPEED = 54613
 KP = 50
 KD = 10
 
+# ==== モーター制御 ====
 class MotorController:
     def __init__(self):
         self.motors = [PWM(Pin(p)) for p in MOTOR_PINS]
@@ -37,6 +61,7 @@ class MotorController:
         for m in self.motors:
             m.duty_u16(0)
 
+# ==== ラインセンサー ====
 class LineSensor:
     def __init__(self):
         self.sensors = [Pin(p, Pin.IN) for p in PHOTOREFLECTOR_PINS]
@@ -52,13 +77,14 @@ class LineSensor:
             return position, True
         return self.last_position, False
 
+# ==== ライントレーサ ====
 class LineTracer:
     def __init__(self):
         self.motor = MotorController()
         self.sensor = LineSensor()
         self.last_error = 0
-        self.running = False  # ON/OFF状態
-        self.led = Pin("LED", Pin.OUT)  # 状態確認用（ON=点灯）
+        self.running = False
+        self.led = Pin("LED", Pin.OUT)
 
     def pd_control(self, position, on_line):
         if not on_line:
@@ -82,7 +108,7 @@ class LineTracer:
             while True:
                 button_pressed = rp2 and rp2.bootsel_button()
 
-                # ボタン押下でON/OFF切り替え
+                # BootselボタンでON/OFF切替
                 if button_pressed and not prev_button:
                     self.wait_for_bootsel_release()
                     self.running = not self.running
@@ -108,5 +134,6 @@ class LineTracer:
             self.motor.stop()
             self.led.off()
 
+# ==== メイン実行 ====
 if __name__ == "__main__":
     LineTracer().run()
