@@ -8,10 +8,10 @@ except ImportError:
 
 # ==== ピン設定 ====
 # --- モーター ---
-MOTOR_LEFT_FWD = 20   # 左モーター前進 (M1A)
-MOTOR_LEFT_REV = 19   # 左モーター後退 (M1B)
-MOTOR_RIGHT_FWD = 17  # 右モーター前進 (M2A)
-MOTOR_RIGHT_REV = 16  # 右モーター後退 (M2B)
+MOTOR_LEFT_FWD = 5    # 左モーター前進 (M1A)
+MOTOR_LEFT_REV = 4    # 左モーター後退 (M1B)
+MOTOR_RIGHT_FWD = 7   # 右モーター前進 (M2A)
+MOTOR_RIGHT_REV = 6   # 右モーター後退 (M2B)
 
 # 配列にまとめて制御クラスへ渡す
 MOTOR_PINS = [
@@ -22,20 +22,8 @@ MOTOR_PINS = [
 ]
 
 # --- フォトリフレクタ ---
-PHOTO_1 = 31
-PHOTO_2 = 29
-PHOTO_3 = 27
-PHOTO_4 = 26
-PHOTO_5 = 25
-PHOTO_6 = 24
-PHOTO_7 = 22
-PHOTO_8 = 21
-
-# センサー配列と重み
-PHOTOREFLECTOR_PINS = [
-    PHOTO_1, PHOTO_2, PHOTO_3, PHOTO_4,
-    PHOTO_5, PHOTO_6, PHOTO_7, PHOTO_8
-]
+# pico-w/main.py の正しいピン設定を適用
+PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 SENSOR_WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 
 # --- 制御パラメータ ---
