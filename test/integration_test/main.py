@@ -25,15 +25,16 @@ led.value(1)  # 動作中LED点灯
 
 # --- モーター制御関数 ---
 def set_motors(left_duty, right_duty):
-    # 方向を逆転させる場合、FWDとREVを入れ替える
     left_duty = max(0, min(65535, int(left_duty)))
     right_duty = max(0, min(65535, int(right_duty)))
 
-    # 左右モーターの方向逆転
-    left_fwd.duty_u16(0)
-    left_rev.duty_u16(left_duty)   # 前進用にREVピンを使用
+    # 左モーターは通常通り前進
+    left_fwd.duty_u16(left_duty)
+    left_rev.duty_u16(0)
+
+    # 右モーターは逆転（前進用にREVピンを使用）
     right_fwd.duty_u16(0)
-    right_rev.duty_u16(right_duty) # 前進用にREVピンを使用
+    right_rev.duty_u16(right_duty)
 
 def stop_motors():
     left_fwd.duty_u16(0)
@@ -43,7 +44,7 @@ def stop_motors():
     print("=== モーター停止 ===")
 
 # --- ライントレースパラメータ ---
-BASE_SPEED = 30000 // 5  # 元の速度の1/5
+BASE_SPEED = 30000 // 5  # 速度を1/5に低減
 KP = 8000
 WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
 
@@ -54,7 +55,8 @@ last_error = 0
 try:
     while True:
         values = [s.value() for s in sensors]
-        # values = [1 - v for v in values]  # 黒=0, 白=1の場合はこちらを有効化
+        # 黒=0, 白=1の場合は以下を有効化
+        # values = [1 - v for v in values]
 
         line_detected_count = sum(values)
 
