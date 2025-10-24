@@ -11,16 +11,19 @@ PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 LED_PIN = "LED"
 
 # --- 車体・速度設定 ---
-WHEEL_DIAMETER = 3.0  # cm
-MOTOR_MAX_RPM = 10000
-TARGET_SPEED = 5.0  # cm/s
+WHEEL_DIAMETER = 3.0    # cm
+MOTOR_MAX_RPM = 10000    # モーター最大RPM
+TARGET_SPEED = 5.0       # cm/s
+MIN_PWM = 20000          # モーターが確実に回る最低PWM値
 
 # 1回転で進む距離
 circumference = math.pi * WHEEL_DIAMETER
 # 目標回転数(RPM)
 target_rpm = (TARGET_SPEED / circumference) * 60
-# PWMデューティ比 (0-65535)
-BASE_SPEED = int(target_rpm / MOTOR_MAX_RPM * 65535)
+# PWMデューティ比
+base_speed_calc = int(target_rpm / MOTOR_MAX_RPM * 65535)
+# 最低PWMを確保
+BASE_SPEED = max(base_speed_calc, MIN_PWM)
 
 print(f"計算されたBASE_SPEED: {BASE_SPEED}")
 
@@ -43,8 +46,9 @@ led.value(1)  # 常時点灯
 
 # --- モーター制御関数 ---
 def set_motors(left_duty, right_duty):
-    left_duty = max(0, min(65535, int(left_duty)))
-    right_duty = max(0, min(65535, int(right_duty)))
+    # デューティ比のクリッピング
+    left_duty = max(MIN_PWM, min(65535, int(left_duty)))
+    right_duty = max(MIN_PWM, min(65535, int(right_duty)))
 
     # 左モーター: 通常前進
     left_fwd.duty_u16(left_duty)
