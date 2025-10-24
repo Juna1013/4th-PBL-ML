@@ -46,17 +46,18 @@ WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
 
 # --- メインループ ---
 print("=== ライントレース常時走行開始 ===")
-try:
-    last_error = 0  # ラインロスト時に前回のエラーを保持
+last_error = 0  # ラインロスト時に前回の誤差を保持
 
+try:
     while True:
         values = [s.value() for s in sensors]
-        # values = [1 - v for v in values]  # 黒=0, 白=1の場合はこちらを有効化
+        # 黒=0, 白=1の場合は以下を有効化
+        # values = [1 - v for v in values]
 
         line_detected_count = sum(values)
 
         if line_detected_count == 0:
-            # ラインロスト時は前回の誤差で左右のモーターを微調整
+            # ラインロスト時も前回のエラーで走行継続
             error = last_error
         else:
             error = sum(WEIGHTS[i] * values[i] for i in range(8)) / line_detected_count
@@ -67,9 +68,7 @@ try:
         right_speed = BASE_SPEED + turn
         set_motors(left_speed, right_speed)
 
-        # デバッグ出力（必要な場合のみ）
-        # print(f"V: {values} | Err: {error:.2f} | L: {int(left_speed)} R: {int(right_speed)}")
-
+        # ループ周期
         time.sleep_ms(10)
 
 except KeyboardInterrupt:
