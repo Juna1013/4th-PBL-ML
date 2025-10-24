@@ -16,7 +16,7 @@ class PhotoReflector:
         """
         全センサーの値を読む
         戻り値: リスト [sensor0, sensor1, ..., sensor7]
-               各値: 0=ライン検出（黒）, 1=ライン外（白）
+            各値: 0=ライン検出（黒）, 1=ライン外（白）
         """
         return [sensor.value() for sensor in self.sensors]
 
