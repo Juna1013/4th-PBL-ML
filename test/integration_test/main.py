@@ -13,15 +13,16 @@ LED_PIN = "LED"
 # --- 車体・速度設定 ---
 WHEEL_DIAMETER = 3.0    # cm
 MOTOR_MAX_RPM = 10000
-TARGET_SPEED = 5.0       # cm/s（参考値、低速ではトルク不足の可能性）
-MIN_PWM = 40000          # モーターが確実に回るPWM値
+TARGET_SPEED = 5.0       # cm/s（参考、半分にPWMで低速化）
+MIN_PWM = 20000          # モーターが確実に回るPWM値
 
-# BASE_SPEEDは最低PWM以上を保証
+# 1回転で進む距離
 circumference = math.pi * WHEEL_DIAMETER
 target_rpm = (TARGET_SPEED / circumference) * 60
 base_speed_calc = int(target_rpm / MOTOR_MAX_RPM * 65535)
-BASE_SPEED = max(base_speed_calc, MIN_PWM)
 
+# 2分の1に速度を低減 + 最低PWM保証
+BASE_SPEED = max(base_speed_calc // 2, MIN_PWM)
 print(f"計算されたBASE_SPEED: {BASE_SPEED}")
 
 # --- モーター初期化 ---
@@ -67,7 +68,7 @@ last_error = 0
 try:
     while True:
         values = [s.value() for s in sensors]
-        # 黒=0, 白=1の場合は以下を有効化
+        # 黒=0, 白=1 の場合は以下を有効化
         # values = [1 - v for v in values]
 
         line_detected_count = sum(values)
