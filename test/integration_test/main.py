@@ -6,8 +6,8 @@ import math
 # --- ピン定義（motor_test.py に準拠） ---
 LEFT_FWD_PIN = 5
 LEFT_REV_PIN = 4
-RIGHT_FWD_PIN = 3
-RIGHT_REV_PIN = 2
+RIGHT_FWD_PIN = 2
+RIGHT_REV_PIN = 3
 PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 LED_PIN = "LED"
 
