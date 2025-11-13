@@ -14,14 +14,34 @@ LED_PIN = "LED"
 # --- 走行パラメータ ---
 WHEEL_DIAMETER = 3.0    # cm
 MOTOR_MAX_RPM = 10000
-TARGET_SPEED = 5.0      # cm/s（参考）
+TARGET_SPEED_CM_S = 10.0  # 目標速度（cm/s）秒速で管理
 MIN_PWM = 25000         # モーターが確実に回る最低PWM
 
+# --- 速度からPWM値を計算する関数 ---
+def speed_cm_s_to_pwm(speed_cm_s):
+    """
+    目標速度（cm/s）からPWM値を計算
+    
+    Args:
+        speed_cm_s: 目標速度（cm/s）
+    
+    Returns:
+        PWM duty値（0-65535）
+    """
+    circumference = math.pi * WHEEL_DIAMETER  # 車輪の円周（cm）
+    rps = speed_cm_s / circumference  # 回転数（回/秒）
+    rpm = rps * 60  # 回転数（回/分）
+    
+    # PWM duty比を計算（0.0-1.0）
+    duty_ratio = rpm / MOTOR_MAX_RPM
+    pwm_value = int(duty_ratio * 65535)
+    
+    # 最低PWM値を保証
+    return max(pwm_value, MIN_PWM)
+
 # --- PWM出力基準値を計算 ---
-circumference = math.pi * WHEEL_DIAMETER
-target_rpm = (TARGET_SPEED / circumference) * 60
-base_speed_calc = int(target_rpm / MOTOR_MAX_RPM * 65535)
-BASE_SPEED = max(base_speed_calc // 4, MIN_PWM)
+BASE_SPEED = speed_cm_s_to_pwm(TARGET_SPEED_CM_S)
+print(f"目標速度: {TARGET_SPEED_CM_S} cm/s")
 print(f"計算された BASE_SPEED: {BASE_SPEED}")
 
 # --- モーター初期化 ---
