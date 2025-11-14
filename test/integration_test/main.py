@@ -6,8 +6,8 @@ import math
 # --- ピン定義（motor_test.py に準拠） ---
 LEFT_FWD_PIN = 5
 LEFT_REV_PIN = 4
-RIGHT_FWD_PIN = 2
-RIGHT_REV_PIN = 3
+RIGHT_FWD_PIN = 3
+RIGHT_REV_PIN = 2
 PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 LED_PIN = "LED"
 
@@ -15,7 +15,7 @@ LED_PIN = "LED"
 WHEEL_DIAMETER = 3.0    # cm
 MOTOR_MAX_RPM = 10000
 TARGET_SPEED_CM_S = 10.0  # 目標速度（cm/s）秒速で管理
-MIN_PWM = 25000         # モーターが確実に回る最低PWM
+MIN_PWM = 20000         # モーターが確実に回る最低PWM（下回る場合は0にする）
 
 # --- 速度からPWM値を計算する関数 ---
 def speed_cm_s_to_pwm(speed_cm_s):
@@ -61,16 +61,29 @@ led.value(1)
 
 # --- モーター制御関数 ---
 def set_motors(left_duty, right_duty):
-    left_duty = max(MIN_PWM, min(65535, int(left_duty)))
-    right_duty = max(MIN_PWM, min(65535, int(right_duty)))
+    # 飽和 + デッドバンド（MIN_PWM未満は0にする）
+    left_duty = int(left_duty)
+    right_duty = int(right_duty)
 
-    # 左モーター前進
+    def apply_deadband(d):
+        if d <= 0:
+            return 0
+        if d < MIN_PWM:
+            return 0
+        if d > 65535:
+            return 65535
+        return d
+
+    left_duty = apply_deadband(left_duty)
+    right_duty = apply_deadband(right_duty)
+
+    # 左モーター（前進はFWDにPWM）
     left_fwd.duty_u16(left_duty)
     left_rev.duty_u16(0)
 
-    # 右モーターは逆接続（REV側にPWM）
-    right_fwd.duty_u16(0)
-    right_rev.duty_u16(right_duty)
+    # 右モーター（前進はFWDにPWM）
+    right_fwd.duty_u16(right_duty)
+    right_rev.duty_u16(0)
 
 def stop_motors():
     for pwm in [left_fwd, left_rev, right_fwd, right_rev]:
@@ -78,8 +91,12 @@ def stop_motors():
     print("=== モーター停止 ===")
 
 # --- ライントレース制御パラメータ ---
-KP = 8000
+KP = 1500
 WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]  # センサー配置に対応
+TURN_LIMIT = int(BASE_SPEED * 0.8)  # 旋回量の上限で暴れ防止
+
+# センサー極性（黒ライン=0 の場合 True にする）
+INVERT_SENSORS = True
 
 print("=== ライントレース開始 ===")
 last_error = 0
@@ -89,8 +106,9 @@ try:
         # 各フォトリフレクタの状態を取得
         values = [s.value() for s in sensors]
 
-        # 必要なら反転（黒=0, 白=1 の場合は次の行を有効化）
-        # values = [1 - v for v in values]
+        # 必要なら反転（黒=0, 白=1 の場合はTrue）
+        if INVERT_SENSORS:
+            values = [1 - v for v in values]
 
         line_detected = sum(values)
         if line_detected == 0:
@@ -101,13 +119,18 @@ try:
             error = sum(WEIGHTS[i] * values[i] for i in range(8)) / line_detected
             last_error = error
 
-        # 偏差に比例した旋回量を計算
+        # 偏差に比例した旋回量を計算（上限あり）
         turn = KP * error
+        if turn > TURN_LIMIT:
+            turn = TURN_LIMIT
+        elif turn < -TURN_LIMIT:
+            turn = -TURN_LIMIT
         left_speed = BASE_SPEED - turn
         right_speed = BASE_SPEED + turn
 
         set_motors(left_speed, right_speed)
         time.sleep_ms(10)
+
 
 except KeyboardInterrupt:
     print("\n=== 割り込み検出 ===")
