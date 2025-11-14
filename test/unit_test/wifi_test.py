@@ -1,17 +1,19 @@
 import network
 import time
-import urequests
-from machine import Pin
+SSID = 'Juna1013'
+PW = 'f94s7uu4'
 
-# 設定
-SSID = "自分のWiFiのSSID"
-PASSWORD = "自分のWiFiのパスワード"
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.connect(SSID, PW)
 
-TEST_URL = "http://example.com"
+while wlan.isconnected() == False:
+    print('Connecting to Wi-Fi router')
+    time.sleep(1)
 
-led = Pin("LED", Pin.OUT)
-
-# WiFi接続関数
-def connect_wifi(ssid, password):
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
+wlan_status = wlan.ifconfig()
+print('Connected')
+print(f'IP Adress: {wlan_status[0]}')
+print(f'Netmask: {wlan_status[1]}')
+print(f'Default Gateway: {wlan_status[2]}')
+print(f'Name Server: {wlan_status[3]}')
