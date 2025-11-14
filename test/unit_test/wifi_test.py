@@ -1,33 +1,20 @@
 import network
 import time
 import urequests
-
-SSID = 'Juna1013'
-PW = 'f94s7uu4'
+import config
 
 # WiFi接続
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect(SSID, PW)
+wlan.connect(config.SSID, config.PASSWORD)
 
-while wlan.isconnected() == False:
-    print('Connecting to Wi-Fi router')
+while not wlan.isconnected():
+    print("Connected...")
     time.sleep(1)
+print("Connected:", wlan.ifconfig()[0])
 
-ip_info = wlan.ifconfig()
-print("Connected!")
-print("IP Adress:", ip_info[0])
-PORT = 8000
-
-# FastAPIサーバーにアクセス
-SERVER_IP = "10.73.246.50"
-PORT = 8000
-
-try:
-    url = f"http://{SERVER_IP}:{PORT}/ping"
-    print("Requesting:", url)
-    response = urequests.get(url)
-    print("Response:", response.text)
-    response.close()
-except Exceprion as e:
-    print("Error:", e)
+# サーバーへのアクセス
+url = f"http://{config.SERVER_IP}:8000/ping"
+res = urequests.get(url)
+print(res.text)
+res.close()

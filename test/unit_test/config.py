@@ -1,0 +1,3 @@
+SSID = "Juna1013"
+PASSWORD = "f94s7uu4"
+SERVER_IP = "10.73.246.50"
