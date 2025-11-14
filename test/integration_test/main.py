@@ -63,23 +63,36 @@ WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]  # センサー配置に�
 
 print("=== ライントレース開始 ===")
 last_error = 0
+DEBUG = True
+_last_debug_ms = 0
 
 try:
     while True:
-        # 各フォトリフレクタの状態を取得
-        values = [s.value() for s in sensors]
+        # 各フォトリフレクタの状態を取得（sensor_test.py と同じ生値）
+        values = [s.value() for s in sensors]  # 白=1, 黒=0 を前提
 
-        # 必要なら反転（黒=0, 白=1 の場合は次の行を有効化）
-        # values = [1 - v for v in values]
+        # 黒(0)を検出したセンサーのみで重み付け平均（line_trace_standaloneの方針に合わせる）
+        weighted_sum = 0.0
+        detected = 0
+        for i, v in enumerate(values):
+            if v == 0:  # 黒ライン検出
+                weighted_sum += WEIGHTS[i]
+                detected += 1
 
-        line_detected = sum(values)
-        if line_detected == 0:
-            # 線が見えないときは前回の誤差を保持（直進維持）
+        if detected == 0:
+            # 線が見えない場合は前回誤差を保持
             error = last_error
         else:
-            # センサー重み付き平均で偏差を計算
-            error = sum(WEIGHTS[i] * values[i] for i in range(8)) / line_detected
+            error = weighted_sum / detected
             last_error = error
+
+        # デバッグ出力（500msごと）
+        if DEBUG:
+            now = time.ticks_ms()
+            if _last_debug_ms == 0 or time.ticks_diff(now, _last_debug_ms) > 500:
+                _last_debug_ms = now
+                led.value(1 - led.value())  # 点滅で生存確認
+                print("Sensors:", " ".join(str(v) for v in values), "| err=", "%.2f" % error)
 
         # 偏差に比例した旋回量を計算
         turn = KP * error
