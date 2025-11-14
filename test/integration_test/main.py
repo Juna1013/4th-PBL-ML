@@ -15,7 +15,7 @@ LED_PIN = "LED"
 WHEEL_DIAMETER = 3.0    # cm
 MOTOR_MAX_RPM = 10000
 TARGET_SPEED = 5.0      # cm/s（参考）
-MIN_PWM = 25000         # モーターが確実に回る最低PWM
+MIN_PWM = 12500         # モーターが確実に回る最低PWM
 
 # --- PWM出力基準値を計算 ---
 circumference = math.pi * WHEEL_DIAMETER
@@ -83,7 +83,8 @@ try:
             # 線が見えない場合は前回誤差を保持
             error = last_error
         else:
-            error = weighted_sum / detected
+            # 左（負の重み）で検出したら左に曲がるよう符号を反転
+            error = -(weighted_sum / detected)
             last_error = error
 
         # デバッグ出力（500msごと）
