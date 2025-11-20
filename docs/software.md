@@ -8,14 +8,14 @@
 
 ## ディレクトリ構成
 
-- **`ml/pico-w/`**: 本番環境用コード
+- **`firmware/pico-w/`**: 本番環境用コード
   - `main.py`: 統合制御プログラム
   - `config.py`: 設定ファイル（WiFi, サーバーURLなど）
   - `wifi_client.py`: HTTP通信クライアント
   - `motor_control.py`: モーター制御クラス
   - `line_trace_controller.py`: ライントレースロジック
   - `sensors.py`: センサー管理クラス
-- **`ml/test/`**: テスト用コード
+- **`firmware/test/`**: テスト用コード
   - `integration_test/`: 統合テスト
   - `unit_test/`: 単体テスト
 

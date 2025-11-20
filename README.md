@@ -13,7 +13,7 @@ Raspberry Pi Pico W を使用したライントレースカーの制御プログ
 
 ## クイックスタート
 
-1. **インストール**: `ml/pico-w/` 内のファイルを Pico W に転送します。
+1. **インストール**: `pico-w/` 内のファイルを Pico W に転送します。
 2. **設定**: `main.py` 内の `WIFI_SSID`, `WIFI_PASSWORD` を編集します。
 3. **実行**:
    - **通常モード**: `python main.py`
