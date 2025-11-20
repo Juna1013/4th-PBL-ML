@@ -16,10 +16,10 @@ MIN_PWM = 10000         # モーターが回る最低限の値
 print("BASE_PWM:", BASE_PWM)
 
 # --- モーターの準備 ---
-left_fwd = PWM(Pin(LEFT_FWD_PIN))
-left_rev = PWM(Pin(LEFT_REV_PIN))
-right_fwd = PWM(Pin(RIGHT_FWD_PIN))
-right_rev = PWM(Pin(RIGHT_REV_PIN))
+left_fwd = PWM(Pin(LEFT_REV_PIN))
+left_rev = PWM(Pin(LEFT_FWD_PIN))
+right_fwd = PWM(Pin(RIGHT_REV_PIN))
+right_rev = PWM(Pin(RIGHT_FWD_PIN))
 
 # 周波数を1000Hzに設定
 left_fwd.freq(1000)
