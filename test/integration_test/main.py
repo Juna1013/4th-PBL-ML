@@ -97,9 +97,9 @@ try:
         if right_speed > 65535: right_speed = 65535
 
         # 5. モーターを動かす
-        # 左モーター（逆転ピンを使って前進）
-        left_fwd.duty_u16(0)
-        left_rev.duty_u16(int(left_speed))
+        # 左モーター（正転ピンを使って前進）
+        left_fwd.duty_u16(int(left_speed))
+        left_rev.duty_u16(0)
         
         # 右モーター（正転ピンを使って前進）
         right_fwd.duty_u16(int(right_speed))
