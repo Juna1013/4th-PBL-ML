@@ -7,12 +7,12 @@ PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
 # --- Pico WのデフォルトLEDを設定 ---
 led = Pin("LED", Pin.OUT)
 
-# --- センサー初期化（プルアップ抵抗を有効化） ---
-# まずプルアップで試す
-sensors = [Pin(p, Pin.IN, Pin.PULL_UP) for p in PHOTOREFLECTOR_PINS]
+# --- センサー初期化（プルなし） ---
+# フォトリフレクタモジュールに抵抗が内蔵されている場合はプル不要
+sensors = [Pin(p, Pin.IN) for p in PHOTOREFLECTOR_PINS]
 
 print("=== ライントレースセンサー テスト開始 ===")
-print("プルアップ抵抗: 有効")
+print("プル抵抗: なし（モジュール内蔵抵抗を使用）")
 print("各センサーの値を個別に表示します")
 print("LEDが点滅中は動作中です。Ctrl + C で停止できます。\n")
 
