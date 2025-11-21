@@ -1,8 +1,11 @@
-from machine import Pin
+from machine import Pin, ADC
 import time
 
 # --- フォトリフレクタの接続ピン ---
-PHOTOREFLECTOR_PINS = [16, 17, 18, 26, 27, 28, 21, 22]
+# デジタルピン: 16, 17, 18, 21, 22
+# アナログピン: 26(ADC0), 27(ADC1), 28(ADC2)
+DIGITAL_PINS = [16, 17, 18, 21, 22]
+ANALOG_PINS = [26, 27, 28]  # これらはADCで読む必要がある
 
 # --- センサーの重み付け（ハードウェアマニュアルに基づく） ---
 SENSOR_WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
@@ -11,9 +14,20 @@ SENSOR_WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
 led = Pin("LED", Pin.OUT)
 
 # --- センサー初期化 ---
-sensors = [Pin(p, Pin.IN) for p in PHOTOREFLECTOR_PINS]
+# デジタルピンはPin.INで初期化
+digital_sensors = [Pin(p, Pin.IN) for p in DIGITAL_PINS]
 
-print("=== ライントレースセンサー 診断テスト ===")
+# アナログピンはADCで初期化（アナログ値を0-1で正規化）
+adc_sensors = [ADC(Pin(p)) for p in ANALOG_PINS]
+
+# アナログ値の閾値（0-65535の範囲で、通常は32768程度が中点）
+ADC_THRESHOLD = 32768  # 中点を基準に黒/白を判定
+
+print("=== ライントレースセンサー 診断テスト（デジタル+アナログ対応） ===")
+print(f"\nセンサー構成:")
+print(f"  デジタルピン（GP）: {DIGITAL_PINS}")
+print(f"  アナログピン（ADC）: {ANALOG_PINS}")
+print(f"  アナログ閾値: {ADC_THRESHOLD}")
 print("\n【問題の診断】")
 print("症状: 電源ON時は全て1、電源OFF時は全て黒(0)になる")
 print("原因の可能性:")
@@ -35,13 +49,25 @@ try:
         led.value(count % 2)
         
         # センサー値を読み取り
-        values = [s.value() for s in sensors]
+        # デジタルピンは直接0/1を読み取り
+        digital_values = [s.value() for s in digital_sensors]
+        
+        # アナログピンはADCで読み取り、閾値で0/1に変換
+        analog_values = []
+        for adc in adc_sensors:
+            raw_adc = adc.read_u16()  # 0-65535の値
+            # 高い値=白（反射している）、低い値=黒（反射していない）
+            analog_values.append(0 if raw_adc < ADC_THRESHOLD else 1)
+        
+        # 全センサー値を結合（デジタル5個 + アナログ3個 = 8個）
+        values = digital_values + analog_values
         
         # ビジュアル表示
         visual = ''.join(['■' if v == 0 else '□' for v in values])
         
         print(f"\n読み取り {count}: {visual}")
         print("値:     " + " ".join(str(v) for v in values))
+        print(f"詳細   (デジタル: {' '.join(str(v) for v in digital_values)}) + (アナログ: {' '.join(str(v) for v in analog_values)})")
         
         # 変化検出
         if prev_values is not None and prev_values == values:
@@ -84,9 +110,13 @@ try:
         # センサーの詳細情報
         if count % 5 == 1:  # 5読み取りごとに詳細表示
             print("\n【詳細情報】")
-            for i, v in enumerate(values):
+            for i, v in enumerate(digital_values):
                 status = "黒" if v == 0 else "白"
-                print(f"  S{i} (GP{PHOTOREFLECTOR_PINS[i]:2d}): {v} ({status})")
+                print(f"  S{i} (デジタルGP{DIGITAL_PINS[i]:2d}): {v} ({status})")
+            for i, (pin, adc, v) in enumerate(zip(ANALOG_PINS, adc_sensors, analog_values)):
+                raw_val = adc.read_u16()
+                status = "黒" if v == 0 else "白"
+                print(f"  S{5+i} (アナログGP{pin:2d}, ADC{i}): {v} ({status}) [Raw: {raw_val}]")
         
         time.sleep(0.5)
 
@@ -103,7 +133,9 @@ except KeyboardInterrupt:
         elif all(v == 0 for v in prev_values):
             print("💡 全て0が続く場合:")
             print("   1. 出力ピンの配線を確認してください")
-            print("   2. Pico Wのピン番号を再確認: [16, 17, 18, 19, 20, 21, 22, 28]")
+            print("   2. Pico Wのピン番号を再確認:")
+            print(f"      デジタル: {DIGITAL_PINS}")
+            print(f"      アナログ: {ANALOG_PINS}")
             print("   3. センサーモジュールのカットポジションを確認")
         else:
             print("✓ センサーは正常に動作しています")
