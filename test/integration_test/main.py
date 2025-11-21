@@ -13,6 +13,10 @@ LED_PIN = "LED"
 BASE_PWM = 12500        # 基本の速度 (0〜65535)
 MIN_PWM = 10000         # モーターが回る最低限の値
 
+# モーター速度補正係数（個体差を補正）
+LEFT_MOTOR_CORRECTION = 1.0   # 左モーターの補正係数
+RIGHT_MOTOR_CORRECTION = 0.9  # 右モーターの補正係数（右が速いので減速）
+
 print("BASE_PWM:", BASE_PWM)
 
 # --- モーターの準備 ---
@@ -86,8 +90,9 @@ try:
         # 4. モーターの速度を計算
         turn_amount = int(KP * error)
         
-        left_speed = BASE_PWM - turn_amount
-        right_speed = BASE_PWM + turn_amount
+        # 補正係数を適用
+        left_speed = (BASE_PWM - turn_amount) * LEFT_MOTOR_CORRECTION
+        right_speed = (BASE_PWM + turn_amount) * RIGHT_MOTOR_CORRECTION
 
         # 速度が範囲を超えないように調整（クリップ処理）
         if left_speed < MIN_PWM: left_speed = MIN_PWM
