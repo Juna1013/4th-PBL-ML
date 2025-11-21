@@ -2,11 +2,11 @@ from machine import Pin, ADC
 import time
 
 # --- フォトリフレクタの接続ピン（アナログのみ） ---
-# アナログピン: 26(ADC0), 27(ADC1), 28(ADC2), 29(ADC3)
-ANALOG_PINS = [26, 27, 28, 29]
+# アナログピン: 26(ADC0), 27(ADC1), 28(ADC2)
+ANALOG_PINS = [26, 27, 28]
 
-# --- センサーの重み付け（ハードウェアマニュアルに基づく） ---
-SENSOR_WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
+# --- センサーの重み付け（3つのセンサー用） ---
+SENSOR_WEIGHTS = [-1.0, 0.0, 1.0]
 
 # --- Pico WのデフォルトLEDを設定 ---
 led = Pin("LED", Pin.OUT)
