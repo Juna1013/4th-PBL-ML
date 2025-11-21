@@ -98,12 +98,12 @@ try:
 
         # 5. モーターを動かす
         # 左モーター（正転ピンを使って前進）
-        left_fwd.duty_u16(int(left_speed))
-        left_rev.duty_u16(0)
+        left_fwd.duty_u16(0)
+        left_rev.duty_u16(int(left_speed))
         
         # 右モーター（正転ピンを使って前進）
-        right_fwd.duty_u16(int(right_speed))
-        right_rev.duty_u16(0)
+        right_fwd.duty_u16(0)
+        right_rev.duty_u16(int(right_speed))
 
         # 少し待つ
         time.sleep_ms(10)
