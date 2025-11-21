@@ -2,7 +2,7 @@ from machine import Pin
 import time
 
 # --- フォトリフレクタの接続ピン ---
-PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
+PHOTOREFLECTOR_PINS = [16, 17, 18, 26, 27, 28, 21, 22]
 
 # --- センサーの重み付け（ハードウェアマニュアルに基づく） ---
 SENSOR_WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
