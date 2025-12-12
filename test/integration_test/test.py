@@ -27,6 +27,10 @@ LED_PIN = "LED"
 MIN_PWM = 5000  # モーターが確実に回る最低PWM
 BASE_SPEED = 10000  # ベース速度
 
+# モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
+LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
+RIGHT_MOTOR_CORRECTION = 0.85 # 右モーターの出力を85%に抑える
+
 # --- モーター初期化 ---
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
 left_rev = PWM(Pin(LEFT_REV_PIN))
@@ -41,14 +45,19 @@ led.value(1)
 
 # --- モーター制御関数 ---
 def set_motors(left_duty, right_duty):
-    left_duty = max(MIN_PWM, min(65535, int(left_duty)))
-    right_duty = max(MIN_PWM, min(65535, int(right_duty)))
+    # 補正係数を適用
+    left_duty = int(left_duty * LEFT_MOTOR_CORRECTION)
+    right_duty = int(right_duty * RIGHT_MOTOR_CORRECTION)
+    
+    # PWM範囲に制限
+    left_duty = max(MIN_PWM, min(65535, left_duty))
+    right_duty = max(MIN_PWM, min(65535, right_duty))
 
-    # 左モーター前進
+    # 左モーター前進（FWDピンで駆動）
     left_fwd.duty_u16(left_duty)
     left_rev.duty_u16(0)
 
-    # 右モーターは逆接続（REV側にPWM）
+    # 右モーターは逆接続（REVピンで駆動 - REVの方が速いため補正係数で調整）
     right_fwd.duty_u16(0)
     right_rev.duty_u16(right_duty)
 
