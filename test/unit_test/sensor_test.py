@@ -1,23 +1,30 @@
-from machine import Pin, ADC
+from machine import Pin
 import time
 
-# --- フォトリフレクタの接続ピン（アナログのみ） ---
-# アナログピン: 26(ADC0), 27(ADC1), 28(ADC2)
-ANALOG_PINS = [26, 27, 28]
+# =====================================================
+# 実際の回路配線に基づくピン定義
+# =====================================================
 
-# --- センサーの重み付け（3つのセンサー用） ---
-SENSOR_WEIGHTS = [-1.0, 0.0, 1.0]
+# --- センサー接続ピン（デジタル入力） ---
+# AE-NJL5901AR-8ch フォトリフレクタアレイ
+# 実際の配線: GP14, GP15, GP16, GP17, GP18, GP19, GP20, GP21
+SENSOR_PINS = [14, 15, 16, 17, 18, 19, 20, 21]
+
+# --- センサーの重み付け（8つのセンサー用） ---
+# 左端(-3.5)から右端(+3.5)までの位置を表す
+SENSOR_WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
 
 # --- Pico WのデフォルトLEDを設定 ---
 led = Pin("LED", Pin.OUT)
 
-# --- センサー初期化（アナログのみ） ---
-adc_sensors = [ADC(Pin(p)) for p in ANALOG_PINS]
+# --- センサー初期化（デジタル入力、プルアップ） ---
+sensors = [Pin(p, Pin.IN, Pin.PULL_UP) for p in SENSOR_PINS]
 
-# アナログ値の閾値
-ADC_THRESHOLD = 32768
-
-print("=== ライントレースセンサー テスト開始（アナログのみ） ===\n")
+print("=== ライントレースセンサー テスト開始（8chデジタル） ===")
+print("【重要】センサー基板上のVR（半固定抵抗）で感度調整が必要です！")
+print("  - 白い面上で全て1（□）になるように調整してください")
+print("  - 黒いライン上で0（■）になるように調整してください")
+print("  - 調整しないと常に同じ値になり、ライン検出できません\n")
 
 try:
     count = 0
@@ -27,26 +34,25 @@ try:
         # LEDを点滅
         led.value(count % 2)
         
-        # アナログピンをADCで読み取り、閾値で0/1に変換
-        values = []
-        for adc in adc_sensors:
-            raw_adc = adc.read_u16()
-            values.append(0 if raw_adc < ADC_THRESHOLD else 1)
+        # デジタルピンを読み取り（0=黒検出, 1=白検出）
+        values = [s.value() for s in sensors]
         
-        # ビジュアル表示
+        # ビジュアル表示（センサー0〜7を左から右へ）
         visual = ''.join(['■' if v == 0 else '□' for v in values])
         
-        # シンプルな出力
+        # 出力表示
         print(f"読み取り {count}: {visual}")
-        print("値:     " + " ".join(str(v) for v in values))
+        print("センサー: " + " ".join([f"S{i}" for i in range(8)]))
+        print("値:       " + " ".join(f" {v}" for v in values))
         
-        # 黒ラインを検出したセンサー情報
+        # 黒ライン検出の判定と誤差計算
         black_sensors = [i for i, v in enumerate(values) if v == 0]
         if black_sensors:
             detected_weights = [SENSOR_WEIGHTS[i] for i in black_sensors]
             weighted_sum = sum(detected_weights)
             error = -(weighted_sum / len(detected_weights))
-            print(f"黒検出: S{black_sensors} | 誤差: {error:+.2f}")
+            sensors_str = ','.join([f"S{i}" for i in black_sensors])
+            print(f"黒検出: [{sensors_str}] | 誤差: {error:+.2f}")
         else:
             print("黒検出: なし（ラインロスト）")
         
