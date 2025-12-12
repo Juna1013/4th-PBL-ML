@@ -24,8 +24,8 @@ THRESHOLD = 30000
 LED_PIN = "LED"
 
 # --- 走行パラメータ ---
-MIN_PWM = 5000  # モーターが確実に回る最低PWM
-BASE_SPEED = 10000  # ベース速度
+MIN_PWM = 3000  # モーターが確実に回る最低PWM
+BASE_SPEED = 5000  # ベース速度
 
 # モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
 LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
