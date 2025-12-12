@@ -29,7 +29,7 @@ BASE_SPEED = 10000  # ベース速度
 
 # モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
 LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
-RIGHT_MOTOR_CORRECTION = 0.85 # 右モーターの出力を85%に抑える
+RIGHT_MOTOR_CORRECTION = 0.9 # 右モーターの出力を85%に抑える
 
 # --- モーター初期化 ---
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
