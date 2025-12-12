@@ -1,28 +1,31 @@
 # line_trace_main.py
-from machine import Pin, PWM
+from machine import Pin, PWM, ADC
 import time
-import math
 
-# --- ピン定義（motor_test.py に準拠） ---
+# =====================================================
+# ピン定義
+# =====================================================
+
+# --- モーターピン（正しい配線） ---
 LEFT_FWD_PIN = 5
 LEFT_REV_PIN = 4
 RIGHT_FWD_PIN = 2
 RIGHT_REV_PIN = 3
-PHOTOREFLECTOR_PINS = [16, 17, 18, 19, 20, 21, 22, 28]
+
+# --- センサーピン（sensor_test.pyと同じ3chアナログセンサー） ---
+# GP26=右, GP27=中, GP28=左
+adc_right = ADC(Pin(26))
+adc_center = ADC(Pin(27))
+adc_left = ADC(Pin(28))
+
+# センサー閾値（これより大きいと「1:白」、小さいと「0:黒」）
+THRESHOLD = 30000
+
 LED_PIN = "LED"
 
 # --- 走行パラメータ ---
-WHEEL_DIAMETER = 3.0    # cm
-MOTOR_MAX_RPM = 10000
-TARGET_SPEED = 5.0      # cm/s（参考）
-MIN_PWM = 5000 # モーターが確実に回る最低PWM
-
-# --- PWM出力基準値を計算 ---
-circumference = math.pi * WHEEL_DIAMETER
-target_rpm = (TARGET_SPEED / circumference) * 60
-base_speed_calc = int(target_rpm / MOTOR_MAX_RPM * 65535)
-BASE_SPEED = max(base_speed_calc // 4, MIN_PWM)
-print(f"計算された BASE_SPEED: {BASE_SPEED}")
+MIN_PWM = 5000  # モーターが確実に回る最低PWM
+BASE_SPEED = 10000  # ベース速度
 
 # --- モーター初期化 ---
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
@@ -31,9 +34,6 @@ right_fwd = PWM(Pin(RIGHT_FWD_PIN))
 right_rev = PWM(Pin(RIGHT_REV_PIN))
 for pwm in [left_fwd, left_rev, right_fwd, right_rev]:
     pwm.freq(1000)
-
-# --- センサー初期化 ---
-sensors = [Pin(p, Pin.IN) for p in PHOTOREFLECTOR_PINS]
 
 # --- LED初期化 ---
 led = Pin(LED_PIN, Pin.OUT)
@@ -58,29 +58,40 @@ def stop_motors():
     print("=== モーター停止 ===")
 
 # --- ライントレース制御パラメータ ---
-KP = 8000
-WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]  # センサー配置に対応
+KP = 3000  # 3センサー用に調整
+# 3つのセンサーの重み: 左=-1, 中=0, 右=+1
+WEIGHTS = [-1.0, 0.0, 1.0]
 
-print("=== ライントレース開始 ===")
+print("=== ライントレース開始（3chアナログセンサー） ===")
 last_error = 0
 last_debug_time = 0
 
 try:
     while True:
-        # 各フォトリフレクタの状態を取得（sensor_test.pyと同じ方法）
-        values = [s.value() for s in sensors]
+        # センサー値の読み取り
+        val_l = adc_left.read_u16()
+        val_c = adc_center.read_u16()
+        val_r = adc_right.read_u16()
+        
+        # 0か1に変換（閾値より大きければ1:白、小さければ0:黒）
+        res_l = 1 if val_l > THRESHOLD else 0
+        res_c = 1 if val_c > THRESHOLD else 0
+        res_r = 1 if val_r > THRESHOLD else 0
+        
+        # 値を配列にまとめる（左、中、右の順）
+        values = [res_l, res_c, res_r]
 
         # デバッグ表示（0.5秒に1回）
         current_time = time.ticks_ms()
         if time.ticks_diff(current_time, last_debug_time) > 500:
             last_debug_time = current_time
-            led.value(not led.value())  # LED反転
-            print("センサー状態:", " ".join(str(v) for v in values))
+            led.toggle()
+            print(f"センサー状態: {res_l} {res_c} {res_r}")
 
         # 黒ライン（0）を検知したセンサーで重み付き平均を計算
         detected_count = 0
         weighted_sum = 0.0
-        for i in range(8):
+        for i in range(3):
             if values[i] == 0:  # 黒を検知
                 weighted_sum += WEIGHTS[i]
                 detected_count += 1
