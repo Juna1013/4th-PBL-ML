@@ -1,5 +1,5 @@
 # line_trace_main.py
-from machine import Pin, PWM, ADC
+from machine import Pin, PWM
 import time
 
 # =====================================================
@@ -12,14 +12,10 @@ LEFT_REV_PIN = 4
 RIGHT_FWD_PIN = 2
 RIGHT_REV_PIN = 3
 
-# --- センサーピン（sensor_test.pyと同じ3chアナログセンサー） ---
-# GP26=右, GP27=中, GP28=左
-adc_right = ADC(Pin(26))
-adc_center = ADC(Pin(27))
-adc_left = ADC(Pin(28))
-
-# センサー閾値（これより大きいと「1:白」、小さいと「0:黒」）
-THRESHOLD = 30000
+# --- センサーピン（8chデジタルセンサー） ---
+# センサー1-8の配置（左から右へ）
+# 1:GP22, 2:GP21, 3:GP28, 4:GP27, 5:GP26, 6:GP18, 7:GP17, 8:GP16
+SENSOR_PINS = [22, 21, 28, 27, 26, 18, 17, 16]
 
 LED_PIN = "LED"
 
@@ -29,7 +25,7 @@ BASE_SPEED = 5000  # ベース速度
 
 # モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
 LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
-RIGHT_MOTOR_CORRECTION = 0.9 # 右モーターの出力を85%に抑える
+RIGHT_MOTOR_CORRECTION = 0.95 # 右モーターの出力を95%に抑える
 
 # --- モーター初期化 ---
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
@@ -38,6 +34,9 @@ right_fwd = PWM(Pin(RIGHT_FWD_PIN))
 right_rev = PWM(Pin(RIGHT_REV_PIN))
 for pwm in [left_fwd, left_rev, right_fwd, right_rev]:
     pwm.freq(1000)
+
+# --- センサー初期化（デジタル入力、プルアップ） ---
+sensors = [Pin(p, Pin.IN, Pin.PULL_UP) for p in SENSOR_PINS]
 
 # --- LED初期化 ---
 led = Pin(LED_PIN, Pin.OUT)
@@ -67,40 +66,30 @@ def stop_motors():
     print("=== モーター停止 ===")
 
 # --- ライントレース制御パラメータ ---
-KP = 3000  # 3センサー用に調整
-# 3つのセンサーの重み: 左=-1, 中=0, 右=+1
-WEIGHTS = [-1.0, 0.0, 1.0]
+KP = 1000  # 8センサー用に調整
+# 8つのセンサーの重み: 左端(-3.5)から右端(+3.5)まで
+WEIGHTS = [-3.5, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5, 3.5]
 
-print("=== ライントレース開始（3chアナログセンサー） ===")
+print("=== ライントレース開始（8chデジタルセンサー） ===")
 last_error = 0
 last_debug_time = 0
 
 try:
     while True:
-        # センサー値の読み取り
-        val_l = adc_left.read_u16()
-        val_c = adc_center.read_u16()
-        val_r = adc_right.read_u16()
-        
-        # 0か1に変換（閾値より大きければ1:白、小さければ0:黒）
-        res_l = 1 if val_l > THRESHOLD else 0
-        res_c = 1 if val_c > THRESHOLD else 0
-        res_r = 1 if val_r > THRESHOLD else 0
-        
-        # 値を配列にまとめる（左、中、右の順）
-        values = [res_l, res_c, res_r]
+        # デジタルピンから直接センサー値を読み取り（0=黒検出, 1=白検出）
+        values = [s.value() for s in sensors]
 
         # デバッグ表示（0.5秒に1回）
         current_time = time.ticks_ms()
         if time.ticks_diff(current_time, last_debug_time) > 500:
             last_debug_time = current_time
             led.toggle()
-            print(f"センサー状態: {res_l} {res_c} {res_r}")
+            print("センサー状態:", " ".join(str(v) for v in values))
 
         # 黒ライン（0）を検知したセンサーで重み付き平均を計算
         detected_count = 0
         weighted_sum = 0.0
-        for i in range(3):
+        for i in range(8):
             if values[i] == 0:  # 黒を検知
                 weighted_sum += WEIGHTS[i]
                 detected_count += 1
