@@ -20,12 +20,12 @@ SENSOR_PINS = [22, 21, 28, 27, 26, 18, 17, 16]
 LED_PIN = "LED"
 
 # --- 走行パラメータ ---
-MIN_PWM = 3000  # モーターが確実に回る最低PWM
-BASE_SPEED = 5000  # ベース速度
+MIN_PWM = 5000  # モーターが確実に回る最低PWM
+BASE_SPEED = 10000  # ベース速度
 
 # モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
 LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
-RIGHT_MOTOR_CORRECTION = 0.95 # 右モーターの出力を95%に抑える
+RIGHT_MOTOR_CORRECTION = 1.0 # 右モーターは100%
 
 # --- モーター初期化 ---
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
