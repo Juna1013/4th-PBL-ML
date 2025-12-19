@@ -106,7 +106,7 @@ try:
         right_speed = BASE_SPEED + turn
 
         set_motors(left_speed, right_speed)
-        time.sleep_ms(10)
+        time.sleep_ms(50)  # 制御周期を長くして旋回動作を持続
 
 
 except KeyboardInterrupt:
