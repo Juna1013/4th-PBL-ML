@@ -22,8 +22,8 @@ MIN_PWM = 5000  # モーターが確実に回る最低PWM
 BASE_SPEED = 10000  # ベース速度
 
 # モーター補正係数（右モーターがREVピン駆動で速いため出力を抑える）
-LEFT_MOTOR_CORRECTION = 1.0   # 左モーターは100%
-RIGHT_MOTOR_CORRECTION = 1.0 # 右モーターは100%
+LEFT_MOTOR_CORRECTION = 1.047   # 左モーターは100%
+RIGHT_MOTOR_CORRECTION = 0.486 # 右モーターは100%
 
 # モーター初期化
 left_fwd = PWM(Pin(LEFT_FWD_PIN))
