@@ -6,11 +6,11 @@ from machine import Pin
 import gc
 
 # Wi-Fi設定
-WIFI_SSID = "YOUR_WIFI_SSID"  # Wi-FiのSSIDに変更してください
-WIFI_PASSWORD = "YOUR_WIFI_PASSWORD"  # Wi-Fiのパスワードに変更してください
+WIFI_SSID = "iPhone SG"  # Wi-FiのSSIDに変更してください
+WIFI_PASSWORD = "12345kurisu"  # Wi-Fiのパスワードに変更してください
 
 # エンドポイント設定
-API_ENDPOINT = "http://example.com/api/sensor-data"  # 送信先のURLに変更してください
+API_ENDPOINT = "http://172.16.225.141:8000/telemetry"  # テレメトリサーバーのエンドポイント
 
 # センサーピン設定 
 # センサーピン（8chデジタルセンサー）
