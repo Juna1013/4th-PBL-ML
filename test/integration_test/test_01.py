@@ -62,7 +62,7 @@ def stop_motors():
     print("=== モーター停止 ===")
 
 # ライントレース制御パラメータ
-KP = 7000   # 比例ゲイン強め
+KP = 9000   # 比例ゲイン強化（急カーブ対応）
 KD = 3000   # 微分ゲイン追加
 WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 
@@ -100,8 +100,8 @@ try:
         # ターン量を制限
         turn = max(-BASE_SPEED, min(BASE_SPEED, turn))
 
-        # 誤差に応じて減速
-        speed_factor = max(0.4, 1.0 - abs(error)/6)
+        # 誤差に応じて減速（急カーブで強く減速）
+        speed_factor = max(0.3, 1.0 - abs(error)/10)
         left_speed = int((BASE_SPEED - turn) * speed_factor)
         right_speed = int((BASE_SPEED + turn) * speed_factor)
 
