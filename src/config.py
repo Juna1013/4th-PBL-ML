@@ -11,5 +11,5 @@ PASSWORD = "12345kurisu"
 # Vercel等のデプロイ先URL、またはローカル開発用IP
 # 例: "https://your-project.vercel.app/api/telemetry"
 # 例: "http://192.168.1.10:3000/api/telemetry"
-API_URL = "https://4th-pbl-front.vercel.app/api/telemetry" 
+API_URL = "https://endra-hub.vercel.app/api/telemetry" 
 
