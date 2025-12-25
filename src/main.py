@@ -32,7 +32,7 @@ TRACER_CONFIG = {
 
 # テレメトリ設定
 TELEMETRY_INTERVAL_MS = 500  # 500msごとに送信
-TELEMETRY_URL = f"http://{config.SERVER_IP}:8000/telemetry"
+TELEMETRY_URL = config.API_URL
 
 # ============================================================
 # メインプログラム
