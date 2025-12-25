@@ -3,7 +3,7 @@
 センサーとモーターの状態をリアルタイムで表示・保存
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from datetime import datetime
 import json
 
@@ -12,6 +12,11 @@ app = Flask(__name__)
 # テレメトリデータを保存するリスト（最新100件）
 telemetry_history = []
 MAX_HISTORY = 100
+
+@app.route('/')
+def dashboard():
+    """ダッシュボードページを表示"""
+    return render_template('dashboard.html')
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -35,12 +40,26 @@ def receive_telemetry():
         # コンソールに表示
         print(f"\n{'='*60}")
         print(f"受信時刻: {data['server_timestamp']}")
-        print(f"センサー値: {data['sensors']}")
-        print(f"左モーター速度: {data['motor']['left_speed']}")
-        print(f"右モーター速度: {data['motor']['right_speed']}")
-        print(f"エラー値: {data['control']['error']:.2f}")
-        print(f"ターン値: {data['control']['turn']}")
-        print(f"WiFi IP: {data['wifi']['ip']}")
+        
+        # データ形式を判定して表示
+        if 'sensors' in data:
+            # test_02_with_telemetry.py形式
+            print(f"センサー値: {data['sensors']}")
+            if 'motor' in data:
+                print(f"左モーター速度: {data['motor']['left_speed']}")
+                print(f"右モーター速度: {data['motor']['right_speed']}")
+            if 'control' in data:
+                print(f"エラー値: {data['control']['error']:.2f}")
+                print(f"ターン値: {data['control']['turn']}")
+            if 'wifi' in data:
+                print(f"WiFi IP: {data['wifi']['ip']}")
+        elif 'sensor_values' in data:
+            # test_02.py形式
+            print(f"センサー値: {data['sensor_values']}")
+            print(f"黒線検出数: {data.get('black_detected', 'N/A')}")
+            print(f"センサーパターン: {data.get('sensor_binary', 'N/A')}")
+            print(f"タイムスタンプ: {data.get('timestamp', 'N/A')}")
+        
         print(f"{'='*60}")
         
         return jsonify({"status": "success", "received": True}), 200
@@ -91,6 +110,7 @@ if __name__ == '__main__':
     print("テレメトリサーバー起動")
     print("ポート: 8000")
     print("エンドポイント:")
+    print("  GET  / - ダッシュボード（ブラウザで開く）")
     print("  GET  /ping - 接続テスト")
     print("  POST /telemetry - テレメトリデータ受信")
     print("  GET  /telemetry/latest - 最新データ取得")

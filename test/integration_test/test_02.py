@@ -10,7 +10,7 @@ WIFI_SSID = "iPhone SG"  # Wi-FiのSSIDに変更してください
 WIFI_PASSWORD = "12345kurisu"  # Wi-Fiのパスワードに変更してください
 
 # エンドポイント設定
-API_ENDPOINT = "http://172.16.225.141:8000/telemetry"  # テレメトリサーバーのエンドポイント
+API_ENDPOINT = "http://172.20.10.3:8000/telemetry"  # テレメトリサーバーのエンドポイント
 
 # センサーピン設定 
 # センサーピン（8chデジタルセンサー）
