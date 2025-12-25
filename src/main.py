@@ -21,7 +21,11 @@ PIN_CONFIG = {
 
 # 走行パラメータ
 TRACER_CONFIG = {
-    **PIN_CONFIG,
+    'sensor_pins': PIN_CONFIG['sensor_pins'],
+    'left_fwd_pin': PIN_CONFIG['left_fwd_pin'],
+    'left_rev_pin': PIN_CONFIG['left_rev_pin'],
+    'right_fwd_pin': PIN_CONFIG['right_fwd_pin'],
+    'right_rev_pin': PIN_CONFIG['right_rev_pin'],
     'base_speed': 8000,
     'left_correction': 0.77,
     'right_correction': 1.0,
