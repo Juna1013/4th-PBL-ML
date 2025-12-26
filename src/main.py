@@ -60,7 +60,7 @@ led.value(1)
 
 # WiFi接続関数
 def connect_wifi():
-    """WiFiに接続"""
+    """WiFiに接続（高速版）"""
     global wlan
     
     print("=" * 50)
@@ -74,12 +74,12 @@ def connect_wifi():
         print(f"接続中: {config.SSID}")
         wlan.connect(config.SSID, config.PASSWORD)
         
-        timeout = 30
+        # 接続を最大5秒待機（高速化）
+        timeout = 5
         while not wlan.isconnected() and timeout > 0:
             print(".", end="")
-            time.sleep(1)
-            timeout -= 1
-            led.toggle()
+            time.sleep(0.5)  # 待機時間を短縮
+            timeout -= 0.5
         
         print()
     
@@ -88,11 +88,10 @@ def connect_wifi():
         print(f"✅ WiFi接続成功!")
         print(f"   IPアドレス: {ip}")
         print(f"   サーバー: {TELEMETRY_URL}")
-        led.value(1)
         return True
     else:
-        print("❌ WiFi接続失敗")
-        led.value(0)
+        print("❌ WiFi接続失敗（タイムアウト）")
+        print("   ライントレースは続行します")
         return False
 
 # テレメトリ送信関数
@@ -171,10 +170,9 @@ def main():
     print("ライントレース + WiFi通信版")
     print("=" * 50)
     
-    # WiFi接続 - テスト用に一時的にコメントアウト
-    # if not connect_wifi():
-    #     print("WiFi接続をスキップして、ライントレースのみ実行します。")
-    print("⚠️ WiFi機能は一時的に無効化されています（テスト中）")
+    # WiFi接続（高速化版）
+    if not connect_wifi():
+        print("WiFi接続をスキップして、ライントレースのみ実行します。")
     
     print("=" * 50)
     print("=== ライントレース開始（改良版） ===")
