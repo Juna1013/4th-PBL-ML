@@ -102,6 +102,7 @@ print("=== ライントレース開始（改良版） ===")
 last_error = 0
 last_debug_time = 0
 last_telemetry_time = 0
+last_wifi_status = "-"  # WiFi送信状態（✓:成功, ✗:失敗, -:未送信）
 
 try:
     while True:
@@ -112,7 +113,7 @@ try:
         if time.ticks_diff(current_time, last_debug_time) > 500:
             last_debug_time = current_time
             led.toggle()
-            print("センサー状態:", " ".join(str(v) for v in values))
+            print(f"センサー状態: {' '.join(str(v) for v in values)} | WiFi: {last_wifi_status}")
 
         detected_count = 0
         weighted_sum = 0.0
@@ -142,7 +143,9 @@ try:
         if wlan.isconnected() and time.ticks_diff(current_time, last_telemetry_time) > TELEMETRY_INTERVAL_MS:
             last_telemetry_time = current_time
             if send_data(values, left_speed, right_speed):
-                print("📤 送信OK")
+                last_wifi_status = "✓"  # 送信成功
+            else:
+                last_wifi_status = "✗"  # 送信失敗
 
         time.sleep_ms(10)
 
