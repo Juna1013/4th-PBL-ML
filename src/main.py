@@ -58,6 +58,24 @@ sensors = [Pin(p, Pin.IN, Pin.PULL_UP) for p in SENSOR_PINS]
 led = Pin(LED_PIN, Pin.OUT)
 led.value(1)
 
+# メモリ監視関数
+def print_memory_status(label=""):
+    """メモリ使用状況を表示"""
+    free = gc.mem_free()
+    alloc = gc.mem_alloc()
+    total = free + alloc
+    usage_percent = (alloc / total) * 100
+    print(f"💾 {label}")
+    print(f"   空きメモリ: {free:,} bytes")
+    print(f"   使用メモリ: {alloc:,} bytes")
+    print(f"   合計メモリ: {total:,} bytes")
+    print(f"   使用率: {usage_percent:.1f}%")
+
+# 起動時のメモリ状態
+print("\n" + "=" * 50)
+print_memory_status("起動時のメモリ状態")
+print("=" * 50)
+
 # WiFi接続関数
 def connect_wifi():
     """WiFiに接続（高速版）"""
@@ -88,6 +106,8 @@ def connect_wifi():
         print(f"✅ WiFi接続成功!")
         print(f"   IPアドレス: {ip}")
         print(f"   サーバー: {TELEMETRY_URL}")
+        gc.collect()
+        print_memory_status("WiFi接続後のメモリ状態")
         return True
     else:
         print("❌ WiFi接続失敗（タイムアウト）")
@@ -98,6 +118,9 @@ def connect_wifi():
 def send_telemetry():
     """テレメトリデータを送信（メモリ最適化版）"""
     try:
+        # 送信前のメモリ状態を記録
+        mem_before = gc.mem_free()
+        
         # 送信前にメモリ解放
         gc.collect()
         
@@ -133,6 +156,13 @@ def send_telemetry():
         del json_data
         del data
         gc.collect()
+        
+        # 送信後のメモリ状態を記録
+        mem_after = gc.mem_free()
+        mem_used = mem_before - mem_after
+        
+        # メモリ使用量を表示（デバッグ用）
+        print(f"   📊 送信処理のメモリ変化: {mem_used:+,} bytes")
         
         return status == 200
         
@@ -186,7 +216,7 @@ def main():
     
     # メモリ初期化
     gc.collect()
-    print(f"💾 空きメモリ: {gc.mem_free()} bytes")
+    print_memory_status("メインループ開始前のメモリ状態")
     
     last_error = 0
     last_debug_time = 0
