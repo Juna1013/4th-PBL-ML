@@ -31,7 +31,7 @@ KD = 3000
 WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 
 # WiFi/テレメトリ設定
-TELEMETRY_INTERVAL_MS = 500
+TELEMETRY_INTERVAL_MS = 2000  # 2000ms(2秒)ごとに送信（メモリ負荷軽減）
 TELEMETRY_URL = config.API_URL
 REQUEST_TIMEOUT = 5
 
@@ -96,8 +96,12 @@ def connect_wifi():
 
 # テレメトリ送信関数
 def send_telemetry():
-    """テレメトリデータを送信"""
+    """テレメトリデータを送信（メモリ最適化版）"""
     try:
+        # 送信前にメモリ解放
+        gc.collect()
+        
+        # データを最小限に（WiFi情報を削除してメモリ削減）
         data = {
             "timestamp": time.ticks_ms(),
             "sensors": current_sensor_values,
@@ -109,10 +113,6 @@ def send_telemetry():
                 "error": current_error,
                 "turn": current_turn,
                 "base_speed": BASE_SPEED
-            },
-            "wifi": {
-                "ip": wlan.ifconfig()[0],
-                "rssi": wlan.status('rssi') if hasattr(wlan, 'status') else None
             }
         }
         
@@ -128,12 +128,17 @@ def send_telemetry():
         
         status = response.status_code
         response.close()
+        
+        # 送信後すぐにメモリ解放
+        del json_data
+        del data
         gc.collect()
         
         return status == 200
         
     except Exception as e:
         print(f"❌ テレメトリ送信エラー: {e}")
+        gc.collect()  # エラー時もメモリ解放
         return False
 
 # モーター制御関数（test_01.pyと同じ）
@@ -174,10 +179,14 @@ def main():
     if not connect_wifi():
         print("WiFi接続をスキップして、ライントレースのみ実行します。")
     
-    print("=" * 50)
+    print("==" * 50)
     print("=== ライントレース開始（改良版） ===")
     print("   (Ctrl+C で停止)")
     print("=" * 50)
+    
+    # メモリ初期化
+    gc.collect()
+    print(f"💾 空きメモリ: {gc.mem_free()} bytes")
     
     last_error = 0
     last_debug_time = 0
