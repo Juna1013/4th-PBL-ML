@@ -1,8 +1,3 @@
-'''
-ライントレース + WiFi通信版
-test_01.pyのライントレースロジックにWiFi通信機能のみを追加
-'''
-
 from machine import Pin, PWM
 import network
 import time
@@ -58,23 +53,6 @@ sensors = [Pin(p, Pin.IN, Pin.PULL_UP) for p in SENSOR_PINS]
 led = Pin(LED_PIN, Pin.OUT)
 led.value(1)
 
-# メモリ監視関数
-def print_memory_status(label=""):
-    """メモリ使用状況を表示"""
-    free = gc.mem_free()
-    alloc = gc.mem_alloc()
-    total = free + alloc
-    usage_percent = (alloc / total) * 100
-    print(f"💾 {label}")
-    print(f"   空きメモリ: {free:,} bytes")
-    print(f"   使用メモリ: {alloc:,} bytes")
-    print(f"   合計メモリ: {total:,} bytes")
-    print(f"   使用率: {usage_percent:.1f}%")
-
-# 起動時のメモリ状態
-print("\n" + "=" * 50)
-print_memory_status("起動時のメモリ状態")
-print("=" * 50)
 
 # WiFi接続関数
 def connect_wifi():
@@ -107,7 +85,6 @@ def connect_wifi():
         print(f"   IPアドレス: {ip}")
         print(f"   サーバー: {TELEMETRY_URL}")
         gc.collect()
-        print_memory_status("WiFi接続後のメモリ状態")
         return True
     else:
         print("❌ WiFi接続失敗（タイムアウト）")
@@ -118,9 +95,6 @@ def connect_wifi():
 def send_telemetry():
     """テレメトリデータを送信（メモリ最適化版）"""
     try:
-        # 送信前のメモリ状態を記録
-        mem_before = gc.mem_free()
-        
         # 送信前にメモリ解放
         gc.collect()
         
@@ -156,13 +130,6 @@ def send_telemetry():
         del json_data
         del data
         gc.collect()
-        
-        # 送信後のメモリ状態を記録
-        mem_after = gc.mem_free()
-        mem_used = mem_before - mem_after
-        
-        # メモリ使用量を表示（デバッグ用）
-        print(f"   📊 送信処理のメモリ変化: {mem_used:+,} bytes")
         
         return status == 200
         
@@ -216,7 +183,6 @@ def main():
     
     # メモリ初期化
     gc.collect()
-    print_memory_status("メインループ開始前のメモリ状態")
     
     last_error = 0
     last_debug_time = 0
@@ -271,16 +237,30 @@ def main():
             set_motors(left_speed, right_speed)
             
             # テレメトリ送信（追加機能）
-            if wlan and wlan.isconnected() and time.ticks_diff(current_time, last_telemetry_time) > TELEMETRY_INTERVAL_MS:
-                last_telemetry_time = current_time
+            if time.ticks_diff(current_time, last_telemetry_time) > TELEMETRY_INTERVAL_MS:
+                # デバッグ: 送信タイミング到達
+                print(f"⏰ 送信タイミング到達（{time.ticks_diff(current_time, last_telemetry_time)}ms経過）")
                 
-                success = send_telemetry()
-                if success:
-                    telemetry_success_count += 1
-                    print(f"📤 送信成功 [{telemetry_success_count}] | L:{current_left_speed} R:{current_right_speed} | エラー:{current_error:.2f}")
+                if wlan is None:
+                    print("⚠️ WiFi未初期化")
+                elif not wlan.isconnected():
+                    print("⚠️ WiFi切断中 - 再接続を試みます")
+                    # WiFi再接続を試みる（ブロッキングしないように短時間で）
+                    gc.collect()
                 else:
-                    telemetry_fail_count += 1
-                    print(f"⚠️  送信失敗 [{telemetry_fail_count}]")
+                    # WiFi接続OK - 送信実行
+                    last_telemetry_time = current_time
+                    print(f"🔄 送信開始...")
+                    
+                    success = send_telemetry()
+                    
+                    if success:
+                        telemetry_success_count += 1
+                        print(f"📤 送信成功 [{telemetry_success_count}] | L:{current_left_speed} R:{current_right_speed} | エラー:{current_error:.2f}")
+                    else:
+                        telemetry_fail_count += 1
+                        print(f"⚠️  送信失敗 [{telemetry_fail_count}]")
+            
             
             time.sleep_ms(10)
     
