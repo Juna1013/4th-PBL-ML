@@ -171,9 +171,10 @@ def main():
     print("ライントレース + WiFi通信版")
     print("=" * 50)
     
-    # WiFi接続
-    if not connect_wifi():
-        print("WiFi接続をスキップして、ライントレースのみ実行します。")
+    # WiFi接続 - テスト用に一時的にコメントアウト
+    # if not connect_wifi():
+    #     print("WiFi接続をスキップして、ライントレースのみ実行します。")
+    print("⚠️ WiFi機能は一時的に無効化されています（テスト中）")
     
     print("=" * 50)
     print("=== ライントレース開始（改良版） ===")
