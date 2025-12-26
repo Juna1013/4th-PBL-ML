@@ -41,7 +41,7 @@ WEIGHTS = [-7, -5, -3, -1, 1, 3, 5, 7]
 # テレメトリ送信設定
 # ============================================================
 TELEMETRY_INTERVAL_MS = 500  # 500msごとに送信
-TELEMETRY_URL = f"http://{config.SERVER_IP}:8000/telemetry"
+TELEMETRY_URL = config.API_URL
 REQUEST_TIMEOUT = 5  # タイムアウト（秒）
 
 # ============================================================
